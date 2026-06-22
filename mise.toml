@@ -1,0 +1,7 @@
+[env]
+GOOS = "linux"
+GOARCH = "amd64"
+CGO_ENABLED = "0"
+BACKEND_PKG = "./cmd/server"
+BACKEND_BIN = ""
+BACKEND_UPX = "1"

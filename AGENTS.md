@@ -74,8 +74,8 @@ Strong success criteria let Codex loop independently. Weak criteria like "make i
 
 **Default to the approved stack unless the user explicitly says otherwise.**
 
-- Frontend: React, Vite, TypeScript, shadcn/ui.
-- Backend: Go, Gin, sqlc, PostgreSQL, Redis.
+- Frontend: React, Vite, TypeScript. Use shadcn/ui when adding reusable UI components.
+- Backend: Go and Gin. Use sqlc, PostgreSQL, and Redis when the feature needs persistence, queries, caching, or queues.
 - Keep API contracts typed and explicit; do not invent parallel REST/RPC styles without approval.
 - Use explicit SQL with sqlc for database access; avoid ORMs unless the user explicitly requests one.
 - Use database migrations for schema changes; do not hand-edit live schemas.
@@ -86,6 +86,7 @@ Strong success criteria let Codex loop independently. Weak criteria like "make i
 
 - `backend/` — Go source. Entry points live under `cmd/`; shared application code belongs under `internal/`; migrations and API specs live under `migrations/` and `api/` when needed.
 - `frontend/` — React / Vite / TypeScript source. Application code lives under `src/`; static files live under `public/` when needed.
+- `frontend/vite.config.ts` — Vite configuration, including the local `/api` proxy to the backend.
 - `build.sh` — one-shot script that builds both frontend and backend from the repo root.
 - `dist/frontend.tar.gz` — frontend build artifact, created from `frontend/dist/`.
 - `dist/backend` — backend build artifact for non-Windows targets.

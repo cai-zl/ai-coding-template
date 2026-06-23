@@ -62,11 +62,13 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## 5. Skill Usage Constraints
 
-**Use skills only when relevant, and never let them expand scope.**
+**Use skills only when relevant. Do not let skills expand scope or cause loops.**
 
-- Before acting, check for relevant or explicitly requested skills.
-- Load current skill instructions before relying on memory.
-- Use the smallest skill set that covers the task; process skills come before implementation skills.
+- Check for relevant skills ONCE per task, at the start. Do not re-check before every action.
+- If you have already decided to invoke (or not invoke) a skill, stick with that decision for the rest of the task.
+- Skills listed in the system prompt as "available for use with the Skill tool" are invoked directly via the `Skill` tool — do NOT use `ToolSearch` on them.
+- Use `ToolSearch` only for tools explicitly listed as "deferred" without schemas.
+- Do not invoke the same skill twice in the same task unless its content explicitly requires it.
 - Do not use skills to justify extra features, files, refactors, tests, or workflows.
 - Priority: direct user instructions → project instructions → skill instructions → default behavior.
 
@@ -111,6 +113,21 @@ Run `./build.sh` from the repo root on Linux, macOS, or Windows Git Bash. It pro
 Overridable env: `GOOS`, `GOARCH`, `CGO_ENABLED`, `BACKEND_PKG`, `BACKEND_BIN`, `BACKEND_UPX`. Set `GOOS` and `GOARCH` together when cross-compiling to a non-default target.
 
 Do not run `go build` or `pnpm build` manually for releases — use the script so artifact paths and flags stay consistent.
+
+---
+
+## 9. Anti-Loop Patterns
+
+If you notice yourself doing any of these, you are looping — STOP:
+
+- Re-announcing the same action ("let me invoke X") without actually executing it.
+- Re-reading a file you just read in this turn.
+- Re-checking skills you already evaluated.
+- Re-stating your plan without making any tool calls in between.
+- Calling `ToolSearch` on a tool that is already loaded or directly available.
+- Alternating between two approaches (e.g., "use Skill tool" vs "use ToolSearch") without committing to either.
+
+**Recovery rule:** if you have produced two or more consecutive messages that announce an action without executing it, your next message MUST contain exactly one concrete tool call (`Read`, `Edit`, `Bash`, `Skill`, etc.) and nothing else. Wait for that tool's result before producing any further text.
 
 ---
 

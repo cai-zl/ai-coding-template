@@ -25,15 +25,15 @@
 /frontend/.vite/
 /frontend/.turbo/
 
-# Go
-*.exe
-*.dll
-*.so
-*.dylib
+# Go (legacy)
 *.test
 *.cover
 *.prof
 /coverage.out
+
+# Rust
+/backend/target/
+**/*.rs.bk
 
 # Python
 __pycache__/
@@ -79,8 +79,17 @@ $RECYCLE.BIN/
 
 # Tooling
 .claude/
+.serena/
 .mise.local.toml
+mise.local.toml
 .direnv/
+
+# Archives and packaged artifacts
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
 
 # Archives and packaged artifacts
 *.7z

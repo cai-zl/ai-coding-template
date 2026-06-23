@@ -5,17 +5,25 @@ A minimal full-stack scaffold for AI-assisted coding projects.
 ## Stack
 
 - Frontend: React, Vite, TypeScript
-- Backend: Go, Gin
-- Data layer convention: sqlc, PostgreSQL, Redis
+- Backend: Rust, axum, tokio
+- ORM: sea-orm 1.1
+- Database: PostgreSQL
+- Cache: Redis
 - Build: `build.sh`
 - Environment variables: `mise.toml`
 
 ## Layout
 
 ```text
-backend/              Go backend
-  cmd/server/         Server entry point
-  internal/server/    Gin router and HTTP tests
+backend/              Rust backend
+  src/
+    main.rs           Server entry point
+    config.rs         Env config
+    state.rs          AppState (sea-orm DB + redis connection)
+    routes/           Axum handlers
+    entity/           sea-orm entities
+    migration/        sea-orm migrations
+  tests/              Integration tests
 frontend/             React frontend
   src/                Application source
 build.sh              One-shot release build
@@ -25,11 +33,18 @@ dist/                 Build output, ignored by git
 
 ## Development
 
-Run the backend:
+Prepare environment variables:
+
+```bash
+cp backend/.env.example backend/.env
+# edit backend/.env with your DATABASE_URL and REDIS_URL
+```
+
+Run the backend (it applies migrations on startup):
 
 ```bash
 cd backend
-go run ./cmd/server
+cargo run
 ```
 
 Run the frontend:
@@ -56,16 +71,32 @@ On Windows with mise:
 mise exec -- bash ./build.sh
 ```
 
-The default backend target is Linux AMD64. Artifacts are written to `dist/`:
+Artifacts are written to `dist/`:
 
 - `dist/frontend.tar.gz`
-- `dist/backend`
+- `dist/backend[.exe]`
 
-To build another target, override `GOOS` and `GOARCH` together.
+Optional overrides:
+
+- `BACKEND_TARGET=debug` — use debug profile instead of release
+- `BACKEND_RUST_TARGET=x86_64-unknown-linux-gnu` — cross-compile via rustup target
+- `BACKEND_UPX=1` — UPX-compress the binary if `upx` is installed
+
+## Sample API
+
+The scaffold ships a `Todo` resource demonstrating the full stack:
+
+- `GET    /api/todos`           — list
+- `GET    /api/todos/:id`       — get (cached in redis)
+- `POST   /api/todos`           — create
+- `PUT    /api/todos/:id`       — update
+- `DELETE /api/todos/:id`       — delete
+
+Schema is defined in `backend/src/migration/`.
 
 ## Next Steps For Apps
 
-- Add database migrations under `backend/migrations/`.
-- Add sqlc queries and generated code under `backend/internal/db/`.
-- Add Redis wiring under `backend/internal/` when a workflow needs caching or queues.
-- Add API contracts under `backend/api/` when external clients need stable schemas.
+- Add new sea-orm entities under `backend/src/entity/`.
+- Add new migrations under `backend/src/migration/` and register them in `Migrator`.
+- Add new route modules under `backend/src/routes/`.
+- Add redis usage patterns alongside the cache pattern in `backend/src/routes/todo.rs`.

@@ -75,42 +75,40 @@ Strong success criteria let Codex loop independently. Weak criteria like "make i
 **Default to the approved stack unless the user explicitly says otherwise.**
 
 - Frontend: React, Vite, TypeScript. Use shadcn/ui when adding reusable UI components.
-- Backend: Go and Gin. Use sqlc, PostgreSQL, and Redis when the feature needs persistence, queries, caching, or queues.
+- Backend: Rust with axum + tokio. Use sea-orm 1.1, PostgreSQL, and Redis when the feature needs persistence, queries, caching, or queues.
 - Keep API contracts typed and explicit; do not invent parallel REST/RPC styles without approval.
-- Use explicit SQL with sqlc for database access; avoid ORMs unless the user explicitly requests one.
-- Use database migrations for schema changes; do not hand-edit live schemas.
-- Put environment-specific values in configuration or environment variables, not source code.
+- Use sea-orm migrations for schema changes; do not hand-edit live schemas.
+- Put environment-specific values in `.env` files or environment variables, not source code.
 - Do not introduce alternative frameworks, ORMs, databases, cache layers, UI kits, or build tools without asking first.
 
 ## 7. Directory Structure
 
-- `backend/` — Go source. Entry points live under `cmd/`; shared application code belongs under `internal/`; migrations and API specs live under `migrations/` and `api/` when needed.
+- `backend/` — Rust source. Entry point is `src/main.rs`; shared application code lives under `src/`; HTTP handlers are grouped under `src/routes/`; sea-orm entities live under `src/entity/`; migrations live under `src/migration/`.
 - `frontend/` — React / Vite / TypeScript source. Application code lives under `src/`; static files live under `public/` when needed.
 - `frontend/vite.config.ts` — Vite configuration, including the local `/api` proxy to the backend.
 - `build.sh` — one-shot script that builds both frontend and backend from the repo root.
 - `dist/frontend.tar.gz` — frontend build artifact, created from `frontend/dist/`.
 - `dist/backend` — backend build artifact for non-Windows targets.
-- `dist/backend.exe` — backend build artifact when `GOOS=windows`.
+- `dist/backend.exe` — backend build artifact on Windows.
 - `dist/` is build output — do not commit it; do not edit by hand.
 
 Rules:
 - Colocate related code by feature, not by file type.
-- Generated code (sqlc, OpenAPI) lives in clearly marked folders; do not hand-edit.
+- Generated code (sea-orm derived `Entity`/`ActiveModel`) is macro-generated; do not hand-edit.
 - Keep release artifacts under `dist/`; do not add alternate output directories without updating `build.sh`.
 
 ## 8. Build
 
-Run `./build.sh` from the repo root on Linux, macOS, or Windows Git Bash. It produces both artifacts under `dist/` and defaults to a Linux AMD64 backend binary.
+Run `./build.sh` from the repo root on Linux, macOS, or Windows Git Bash. It produces both artifacts under `dist/`.
 
 - Frontend: `pnpm install` + `pnpm build` → `dist/frontend.tar.gz`.
-- Backend default: `CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -buildvcs=false -ldflags='-s -w'` → `dist/backend`.
-- Windows target: `GOOS=windows GOARCH=amd64 ./build.sh` → `dist/backend.exe`.
+- Backend default: `cargo build --release` → `dist/backend` (or `dist/backend.exe` on Windows).
 - Optional: `BACKEND_UPX=1 ./build.sh` runs UPX if installed, for further compression.
 - With mise on Windows, run `mise exec -- bash ./build.sh`. Do not run `mise exec -- ./build.sh`; Windows will try to execute the shell script as a native Win32 program.
 
-Overridable env: `GOOS`, `GOARCH`, `CGO_ENABLED`, `BACKEND_PKG`, `BACKEND_BIN`, `BACKEND_UPX`. Set `GOOS` and `GOARCH` together when cross-compiling to a non-default target.
+Overridable env: `BACKEND_TARGET` (`release` by default, set to `debug` for faster builds), `BACKEND_RUST_TARGET` (rustup target triple for cross-compilation), `BACKEND_BIN_NAME`, `BACKEND_UPX`.
 
-Do not run `go build` or `pnpm build` manually for releases — use the script so artifact paths and flags stay consistent.
+Do not run `cargo build` or `pnpm build` manually for releases — use the script so artifact paths and flags stay consistent.
 
 ---
 
